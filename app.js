@@ -3,9 +3,9 @@ const bodyParser = require('body-parser');
 const mongoose = require('mongoose');
 const path = require('path');
 const multer = require('multer');
-// const { v4: uuidv4 } = require('uuid');
 
 const feedRoutes = require('./routes/feed');
+const authRoutes = require('./routes/auth');
 const MONGODB_URI = require('./config');
 
 const app = express();
@@ -14,8 +14,8 @@ const fileStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         cb(null, 'images');
     },
-    fileName: (req, file, cb) => {
-        cb(null, uuidv4() + '-' + file.originalname);
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + '-' + file.originalname);
     }
 });
 
@@ -39,12 +39,14 @@ app.use((req, res, next) => {
 })
 
 app.use('/feed', feedRoutes);
+app.use('/auth', authRoutes);
 
 app.use((error, req, res, next) => {
     console.log(error);
     const status = error.statusCode || 500;
     const message = error.message;
-    res.status(status).json({ message: message })
+    const data = error.data;
+    res.status(status).json({ message: message, data: data })
 })
 
 mongoose.connect(MONGODB_URI)
